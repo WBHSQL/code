@@ -1,4 +1,4 @@
-name: Sign Add to Calendar MiMo shortcut on macOS
+name: Build and sign native MiMo Calendar shortcut
 on:
   push:
     branches: [codex/mimo-calendar-shortcut]
@@ -8,7 +8,7 @@ on:
   workflow_dispatch:
 jobs:
   build:
-    runs-on: macos-15
+    runs-on: ubuntu-latest
     permissions:
       contents: read
     steps:
@@ -16,23 +16,26 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
-      - name: Build and verify 820 original actions
+      - name: Build native Apple Shortcuts definition
         env:
           SKIP_HUBSIGN: '1'
         run: python tools/mimo-calendar/build.py
-      - name: Sign with Apple's official shortcuts tool
-        run: shortcuts sign --mode anyone --input dist/Add-to-Calendar-MiMo.unsigned.shortcut --output dist/Add-to-Calendar-MiMo.shortcut
-      - name: Validate signed container
+      - name: Sign with Shortcuty community signing API
         run: |
+          curl --fail-with-body --silent --show-error --max-time 110             -F 'file=@dist/Add-to-Calendar-MiMo.unsigned.shortcut;filename=Add-to-Calendar-MiMo.shortcut'             'https://sign.shortcuty.app/api/v1/sign'             --output dist/Add-to-Calendar-MiMo.shortcut
           python - <<'PY'
-          from pathlib import Path
-          p=Path('dist/Add-to-Calendar-MiMo.shortcut')
-          assert p.read_bytes()[:4]==b'AEA1'
-          print('APPLE_SIGNATURE_OK',len(p.read_bytes()))
+          import pathlib,hashlib
+          unsigned=pathlib.Path('dist/Add-to-Calendar-MiMo.unsigned.shortcut').read_bytes()
+          signed=pathlib.Path('dist/Add-to-Calendar-MiMo.shortcut').read_bytes()
+          assert unsigned.startswith(b'bplist00'), 'Incorrect original'
+          assert signed.startswith(b'AEA1'), f'Unexpected signed file header {signed[:40]!r}'
+          assert len(signed)>1000
+          print('SIGNED_FILE_OK',len(signed),hashlib.sha256(signed).hexdigest())
           PY
-      - name: Downloadable iPhone shortcut
+      - name: Upload signed shortcut for iPhone
         uses: actions/upload-artifact@v4
         with:
-          name: Add-to-Calendar-MiMo
+          name: Add-to-Calendar-MiMo-Native
           path: dist/Add-to-Calendar-MiMo.shortcut
           if-no-files-found: error
+          retention-days: 30

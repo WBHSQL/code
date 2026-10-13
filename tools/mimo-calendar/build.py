@@ -103,6 +103,10 @@ print('UNSIGNED_FILE',out,'BYTES',out.stat().st_size)
 
 # The unofficial community HubSign endpoint may change or require access.
 # Never include the user's secret in any shortcut used for third-party signing.
+if os.environ.get('SKIP_HUBSIGN') == '1':
+    print('SKIP_HUBSIGN_FOR_APPLE_SIGN_PROBE')
+    raise SystemExit(0)
+
 payload=json.dumps({'shortcutName':NEW_NAME,
                     'shortcut':plistlib.dumps(obj,fmt=plistlib.FMT_XML).decode('utf-8')}).encode()
 req=urllib.request.Request('https://hubsign.routinehub.services/sign',data=payload,method='POST',headers={

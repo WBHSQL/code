@@ -1,4 +1,4 @@
-name: Inspect Add to Calendar for MiMo migration
+name: Build Add to Calendar MiMo shortcut
 on:
   push:
     branches: [codex/mimo-calendar-shortcut]
@@ -7,7 +7,7 @@ on:
       - 'tools/mimo-calendar/**'
   workflow_dispatch:
 jobs:
-  audit:
+  build:
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -16,5 +16,11 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
-      - name: Inspect original public shortcut
-        run: python tools/mimo-calendar/inspect.py
+      - name: Build, validate and sign
+        run: python tools/mimo-calendar/build.py
+      - name: Downloadable iPhone shortcut
+        uses: actions/upload-artifact@v4
+        with:
+          name: Add-to-Calendar-MiMo
+          path: dist/Add-to-Calendar-MiMo.shortcut
+          if-no-files-found: error

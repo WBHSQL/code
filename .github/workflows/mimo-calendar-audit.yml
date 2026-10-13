@@ -17,4 +17,4 @@ jobs:
         with:
           python-version: '3.12'
       - name: Inspect original public shortcut
-        run: python tools/mimo-calendar/audit.py
+        run: python tools/mimo-calendar/inspect.py

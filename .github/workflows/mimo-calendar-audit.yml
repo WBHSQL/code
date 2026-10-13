@@ -20,6 +20,13 @@ jobs:
         env:
           SKIP_HUBSIGN: '1'
         run: python tools/mimo-calendar/build.py
+      - name: Upload unsigned native shortcut for optional in-browser signing
+        uses: actions/upload-artifact@v4
+        with:
+          name: Add-to-Calendar-MiMo-Unsigned
+          path: dist/Add-to-Calendar-MiMo.unsigned.shortcut
+          if-no-files-found: error
+          retention-days: 30
       - name: Sign with Shortcuty community signing API
         run: |
           curl --fail-with-body --silent --show-error --max-time 110             -F 'file=@dist/Add-to-Calendar-MiMo.unsigned.shortcut;filename=Add-to-Calendar-MiMo.shortcut'             'https://sign.shortcuty.app/api/v1/sign'             --output dist/Add-to-Calendar-MiMo.shortcut
